@@ -14,6 +14,7 @@ let start = false
 let maxScore = 0
 let gem = 0
 let shop = false
+let buyed = []
 
 let player = {
     x: WIDTH / 2,
@@ -54,6 +55,16 @@ init = () => {
             maxScore = savedScore.maxScore
             gems = savedScore.gems
         }
+
+        buyed = savedScore.buyed
+
+        savedScore.buyed.forEach(color => {
+            items.forEach(item => {
+                if(item.color === color) {
+                    item.price = 0
+                }
+            })
+        })
     }
     window.addEventListener('resize', onWindowResize, false)
     window.addEventListener('keypress', onKeyPress)
@@ -107,7 +118,7 @@ update = () => {
             if(player.x < tree.x + tree.w && player.x + player.w > tree.x &&player.y + player.h > tree.y && player.y < tree.y + tree.h) {
                 if(maxScore < Math.floor(score)) {
                     maxScore = Math.floor(score)
-                    localStorage.setItem('skiData', JSON.stringify({ maxScore: maxScore, gems: gems }))
+                    localStorage.setItem('skiData', JSON.stringify({ maxScore: maxScore, gems: gems, buyed: buyed }))
                 }
                 start = false
                 init()
@@ -123,7 +134,7 @@ update = () => {
 
             if(player.x < gem.x + gem.w && player.x + player.w > gem.x &&player.y + player.h > gem.y && player.y < gem.y + gem.h){
                 gems++
-                localStorage.setItem('skiData', JSON.stringify({ maxScore: maxScore, gems: gems }))
+                localStorage.setItem('skiData', JSON.stringify({ maxScore: maxScore, gems: gems, buyed: buyed }))
                 gem = {}
             }
             gem.y -= 4
@@ -195,9 +206,18 @@ onClickMouse = e => {
                 if(e.pageX > 128 + (128 * i) && e.pageX < (128 + (128 * i)) + 32 && e.pageY > HEIGHT / 2 && e.pageY < HEIGHT / 2 + 32) {
                     console.log(item)
                     if(gems >= item.price) {
-                        player.color = item.color
-                        gems -= item.price
-                        item.price = 'Buyed'
+                        if(!(buyed.some(b => {
+                            return b === item.color
+                        }))){
+                            console.log("Comprar")
+                            buyed.push(item.color)
+                            player.color = item.color
+                            gems -= item.price
+                            item.price = 0
+                            localStorage.setItem('skiData', JSON.stringify({ maxScore: maxScore, gems: gems, buyed: buyed }))
+                        } else {
+                            player.color = item.color
+                        }
                     }
                 }
             })
