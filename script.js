@@ -13,6 +13,7 @@ let gems = 0
 let start = false
 let maxScore = 0
 let gem = 0
+let shop = false
 
 let player = {
     x: WIDTH / 2,
@@ -46,10 +47,13 @@ const generateTree = () => {
 init = () => {
     trees = []
     score = 0
-    let savedScore = localStorage.getItem('maxScore')
-    console.log(savedScore)
-    if(maxScore < savedScore) {
-        maxScore = savedScore
+    let savedScore = JSON.parse(localStorage.getItem('skiData'))
+    if(savedScore !== null) {
+        console.log(savedScore.maxScore)
+        if(maxScore < savedScore.maxScore) {
+            maxScore = savedScore.maxScore
+            gems = savedScore.gems
+        }
     }
     window.addEventListener('resize', onWindowResize, false)
     window.addEventListener('keypress', onKeyPress)
@@ -75,6 +79,10 @@ init = () => {
         ctx.font = "20px Arial"
         ctx.textAlign = "center"
         ctx.fillText(`Pontuação Máxima: ${maxScore}`, WIDTH / 2, HEIGHT / 2)
+        ctx.font = "20px Arial"
+        ctx.textAlign = "center"
+        ctx.fillText(`Gems: ${gems}`, WIDTH / 2, HEIGHT / 2 + 25)
+
         ctx.textAlign = "center"
         ctx.fillText("Shop", WIDTH / 2, HEIGHT / 2 - 50)
         
@@ -99,7 +107,7 @@ update = () => {
             if(player.x < tree.x + tree.w && player.x + player.w > tree.x &&player.y + player.h > tree.y && player.y < tree.y + tree.h) {
                 if(maxScore < Math.floor(score)) {
                     maxScore = Math.floor(score)
-                    localStorage.setItem('maxScore', maxScore)
+                    localStorage.setItem('skiData', JSON.stringify({ maxScore: maxScore, gems: gems }))
                 }
                 start = false
                 init()
@@ -115,6 +123,7 @@ update = () => {
 
             if(player.x < gem.x + gem.w && player.x + player.w > gem.x &&player.y + player.h > gem.y && player.y < gem.y + gem.h){
                 gems++
+                localStorage.setItem('skiData', JSON.stringify({ maxScore: maxScore, gems: gems }))
                 gem = {}
             }
             gem.y -= 4
@@ -173,14 +182,30 @@ onKeyPress = e => {
 
 onClickMouse = e => {
     if(!start) {
-        if(e.pageX > 455 && e.pageX < 556 && e.pageY > 328 && e.pageY < 378) {
+        if(e.pageX > 455 && e.pageX < 556 && e.pageY > 328 && e.pageY < 378 || shop) {
             console.log("shop")
-            shop()
+            shopPage()
+            shop = true
+            if(e.pageX > 414 && e.pageY > 631 && e.pageX < 498 && e.pageY < 669) {
+                shop = false
+                start = true
+                init()
+            }
+            items.forEach((item, i) => {
+                if(e.pageX > 128 + (128 * i) && e.pageX < (128 + (128 * i)) + 32 && e.pageY > HEIGHT / 2 && e.pageY < HEIGHT / 2 + 32) {
+                    console.log(item)
+                    if(gems >= item.price) {
+                        player.color = item.color
+                        gems -= item.price
+                        item.price = 'Buyed'
+                    }
+                }
+            })
         } else {
-            console.log(e.pageX)
-            console.log(e.pageY)
-            start = true
-            init()
+            if(!shop) {
+                start = true
+                init()
+            }
         }
     }
     //console.log(e.pageX)
@@ -197,7 +222,7 @@ onWindowResize = () => {
     draw()
 }
 
-shop = () => {
+shopPage = () => {
     ctx.fillStyle = "white"
     ctx.fillRect(0, 0, WIDTH, HEIGHT)
 
@@ -209,6 +234,9 @@ shop = () => {
         ctx.fillStyle = "black"
         ctx.textAlign = "center"
         ctx.fillText(`${item.price}`, 128 + (128 * i) + 16, HEIGHT / 2 + 80)
+
+        ctx.textAlign = "center"
+        ctx.fillText("Jogar", WIDTH / 2 - 50, HEIGHT / 2 + 250)
     })
 }
 
