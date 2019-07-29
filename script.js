@@ -12,6 +12,7 @@ let score = 1
 let gems = 0
 let start = false
 let maxScore = 0
+let gem = 0
 
 let player = {
     x: WIDTH / 2,
@@ -21,6 +22,14 @@ let player = {
     color: 'red',
     speed: 4
 }
+
+const items = [
+    {price: 5, color: 'blue'},
+    {price: 5, color: 'black'},
+    {price: 5, color: 'yellow'},
+    {price: 5, color: 'brown'},
+    {price: 5, color: 'orange'},
+]
 
 let trees = []
 const generateTree = () => {
@@ -99,6 +108,28 @@ update = () => {
         
         score += 1 / 30
 
+        if(gem !== undefined) {
+            if(gem.y + gem.h < 0) {
+                gem = {}
+            }
+
+            if(player.x < gem.x + gem.w && player.x + player.w > gem.x &&player.y + player.h > gem.y && player.y < gem.y + gem.h){
+                gems++
+                gem = {}
+            }
+            gem.y -= 4
+        }
+
+        if(Math.floor(score) % 10 === 0) {
+            gem = {
+                x: Math.floor(Math.random() * WIDTH),
+                y: HEIGHT + 128,
+                color: 'purple',
+                w: WIDTH * 0.03,
+                h: WIDTH * 0.03,
+            }
+        }
+
         player.x += player.speed * move
 
         requestAnimationFrame(update)
@@ -119,10 +150,18 @@ draw = () => {
         ctx.fillRect(tree.x, tree.y, tree.w, tree.h)
     })
 
+    if(gem !== undefined) {
+        ctx.fillStyle = gem.color
+        ctx.fillRect(gem.x, gem.y, gem.w, gem.h)
+    }
+
     ctx.fillStyle = "black"
     ctx.font = "40px Arial"
     ctx.textAlign = "center"
     ctx.fillText(Math.floor(score), WIDTH / 2, 75)
+    ctx.font = "20px Arial"
+    ctx.textAlign = "center"
+    ctx.fillText(gems, WIDTH / 2, 125)
 }
 
 onKeyPress = e => {
@@ -136,6 +175,7 @@ onClickMouse = e => {
     if(!start) {
         if(e.pageX > 455 && e.pageX < 556 && e.pageY > 328 && e.pageY < 378) {
             console.log("shop")
+            shop()
         } else {
             console.log(e.pageX)
             console.log(e.pageY)
@@ -155,6 +195,21 @@ onWindowResize = () => {
     canvas.width = WIDTH
     canvas.height = HEIGHT
     draw()
+}
+
+shop = () => {
+    ctx.fillStyle = "white"
+    ctx.fillRect(0, 0, WIDTH, HEIGHT)
+
+    items.forEach((item, i) => {
+        console.log(item)
+        console.log(i)
+        ctx.fillStyle = item.color,
+        ctx.fillRect(128 + (128 * i), HEIGHT / 2, 32, 32)
+        ctx.fillStyle = "black"
+        ctx.textAlign = "center"
+        ctx.fillText(`${item.price}`, 128 + (128 * i) + 16, HEIGHT / 2 + 80)
+    })
 }
 
 init()
